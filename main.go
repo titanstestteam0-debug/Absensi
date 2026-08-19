@@ -5,6 +5,13 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
+
+	// Import blank ini menyertakan database timezone IANA langsung di dalam
+	// binary. Tanpa ini, time.LoadLocation("Asia/Jakarta") bisa gagal di
+	// container/hosting yang tidak menyediakan file tzdata OS (mis. image
+	// minimal ala Railway/Nixpacks), karena Go butuh sumber data zona waktu.
+	_ "time/tzdata"
 
 	"absensi-backend/config"
 	"absensi-backend/routes"
@@ -19,6 +26,18 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("info: .env tidak ditemukan, pakai environment variable yang sudah ada")
 	}
+
+	// PENTING: kunci timezone aplikasi ke Asia/Jakarta (WIB), jangan andalkan
+	// timezone bawaan OS server. Semua pemanggilan time.Now() di aplikasi ini
+	// (termasuk validasi jam scan-in/out) dan koneksi database (yang pakai
+	// DSN "loc=Local") sama-sama mengikuti time.Local, jadi cukup di-set
+	// sekali di sini supaya konsisten di mana pun di-deploy (lokal, Railway,
+	// TiDB Cloud, dll) - tidak lagi bergantung timezone container hosting.
+	jakarta, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		log.Fatalf("gagal memuat timezone Asia/Jakarta: %v", err)
+	}
+	time.Local = jakarta
 
 	config.ConnectDB()
 	defer config.DB.Close()
@@ -58,4 +77,3 @@ func main() {
 		log.Fatalf("Gagal menjalankan server: %v", err)
 	}
 }
-
