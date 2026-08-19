@@ -1,0 +1,547 @@
+{
+  "info": {
+    "name": "Absensi Guru QR - Backend API (Wahyu)",
+    "description": "Koleksi endpoint API Sistem Absensi Jam Mengajar Guru berbasis QR Code. Import file ini ke Postman, lalu atur variable {{base_url}} dan jalankan 'Login' terlebih dahulu — token akan otomatis tersimpan ke {{token}} untuk dipakai request lainnya.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "admin_nip",
+      "value": "198000000001"
+    },
+    {
+      "key": "admin_password",
+      "value": "password123"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.collectionVariables.set('token', data.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nip\": \"{{admin_nip}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+            },
+            "description": "Login menggunakan NIP + password. Response berisi JWT yang otomatis disimpan ke variable {{token}}."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Teachers (Master Guru)",
+      "item": [
+        {
+          "name": "List Teachers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/teachers"
+          }
+        },
+        {
+          "name": "Create Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/admin/teachers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Guru Baru\",\n  \"nip\": \"199900000099\",\n  \"email\": \"guru.baru@sekolah.sch.id\",\n  \"password\": \"password123\",\n  \"role\": \"guru\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Teacher (Guru Pengganti)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/admin/teachers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dedi Guru Pengganti\",\n  \"nip\": \"199500000088\",\n  \"email\": \"dedi.inval@sekolah.sch.id\",\n  \"password\": \"password123\",\n  \"role\": \"guru_pengganti\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Teacher",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/admin/teachers/2",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi Santoso, S.Pd\",\n  \"email\": \"budi@sekolah.sch.id\",\n  \"role\": \"guru\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete (Nonaktifkan) Teacher",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/teachers/2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Rooms (Master Ruangan + QR)",
+      "item": [
+        {
+          "name": "List Rooms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/rooms"
+          }
+        },
+        {
+          "name": "Create Room (Generate QR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/admin/rooms",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ruang 11 IPA 1\"\n}"
+            },
+            "description": "Response berisi qr_string unik yang siap di-encode jadi QR Code dan dicetak/ditempel di ruangan."
+          }
+        },
+        {
+          "name": "Update Room",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/admin/rooms/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ruang 10 IPA 1 (Renovasi)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete (Nonaktifkan) Room",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/rooms/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Schedules (Jadwal)",
+      "item": [
+        {
+          "name": "List Schedules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/schedules"
+          }
+        },
+        {
+          "name": "Create Schedule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/admin/schedules",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teacher_id\": 2,\n  \"room_id\": 1,\n  \"day_of_week\": 1,\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"10:30:00\",\n  \"target_jp\": 2,\n  \"subject\": \"Matematika\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "day_of_week: 1=Senin ... 7=Minggu"
+          }
+        },
+        {
+          "name": "Update Schedule",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/admin/schedules/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teacher_id\": 2,\n  \"room_id\": 1,\n  \"day_of_week\": 1,\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"10:30:00\",\n  \"target_jp\": 2,\n  \"subject\": \"Matematika Lanjut\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete (Nonaktifkan) Schedule",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/schedules/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance (Guru - Flutter)",
+      "item": [
+        {
+          "name": "Scan In (Guru Utama)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/attendance/scan-in",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qr_string\": \"ROOM-A1B2C3D4\"\n}"
+            },
+            "description": "Login sebagai guru (bukan admin) sebelum menjalankan request ini. Server mengikat presensi ke jadwal terdekat berdasarkan waktu SERVER, bukan waktu device."
+          }
+        },
+        {
+          "name": "Scan In (Mode Guru Pengganti / Inval)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/attendance/scan-in",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qr_string\": \"ROOM-A1B2C3D4\",\n  \"substitute_for_id\": 2\n}"
+            },
+            "description": "substitute_for_id diisi dengan ID guru utama yang sedang cuti/berhalangan dan digantikan."
+          }
+        },
+        {
+          "name": "Scan Out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/attendance/scan-out",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qr_string\": \"ROOM-A1B2C3D4\"\n}"
+            }
+          }
+        },
+        {
+          "name": "My Attendance History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/attendance/history"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leaves / Cuti",
+      "item": [
+        {
+          "name": "Ajukan Cuti (Guru)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/leaves",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2026-07-28\",\n  \"end_date\": \"2026-07-29\",\n  \"leave_type\": \"sakit\",\n  \"reason\": \"Demam, istirahat dokter\",\n  \"attachment_url\": \"https://example.com/uploads/surat-dokter.jpg\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Riwayat Cuti Saya (Guru)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/leaves"
+          }
+        },
+        {
+          "name": "List Semua Cuti (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/leaves"
+          }
+        },
+        {
+          "name": "Setujui Cuti (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/leaves/1/approve"
+          }
+        },
+        {
+          "name": "Tolak Cuti (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/leaves/1/reject"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports (Admin)",
+      "item": [
+        {
+          "name": "Rekap Bulanan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/reports/monthly?month=7&year=2026",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "reports",
+                "monthly"
+              ],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "7"
+                },
+                {
+                  "key": "year",
+                  "value": "2026"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "History Log (Detail Scan)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/reports/history?teacher_id=2&start=2026-07-01&end=2026-07-31",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "reports",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "teacher_id",
+                  "value": "2"
+                },
+                {
+                  "key": "start",
+                  "value": "2026-07-01"
+                },
+                {
+                  "key": "end",
+                  "value": "2026-07-31"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
