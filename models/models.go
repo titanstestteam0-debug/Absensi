@@ -15,6 +15,7 @@ type User struct {
 	Name         string    `json:"name"`
 	NIP          string    `json:"nip"`
 	Email        string    `json:"email,omitempty"`
+	PhotoURL     string    `json:"photo_url,omitempty"`
 	PasswordHash string    `json:"-"`
 	Role         Role      `json:"role"`
 	IsActive     bool      `json:"is_active"`
@@ -22,10 +23,11 @@ type User struct {
 }
 
 type Room struct {
-	ID       uint64 `json:"id"`
-	Name     string `json:"name"`
-	QRString string `json:"qr_string"`
-	IsActive bool   `json:"is_active"`
+	ID          uint64     `json:"id"`
+	Name        string     `json:"name"`
+	QRString    string     `json:"qr_string"`
+	IsActive    bool       `json:"is_active"`
+	QRExpiresAt *time.Time `json:"qr_expires_at,omitempty"`
 }
 
 type Schedule struct {
@@ -51,16 +53,17 @@ const (
 )
 
 type Leave struct {
-	ID            uint64      `json:"id"`
-	TeacherID     uint64      `json:"teacher_id"`
-	StartDate     string      `json:"start_date"` // "YYYY-MM-DD"
-	EndDate       string      `json:"end_date"`
-	LeaveType     string      `json:"leave_type"`
-	Reason        string      `json:"reason"`
-	AttachmentURL string      `json:"attachment_url,omitempty"`
-	Status        LeaveStatus `json:"status"`
-	ApprovedBy    *uint64     `json:"approved_by,omitempty"`
-	CreatedAt     time.Time   `json:"created_at"`
+	ID              uint64      `json:"id"`
+	TeacherID       uint64      `json:"teacher_id"`
+	StartDate       string      `json:"start_date"` // "YYYY-MM-DD"
+	EndDate         string      `json:"end_date"`
+	LeaveType       string      `json:"leave_type"`
+	Reason          string      `json:"reason"`
+	AttachmentURL   string      `json:"attachment_url,omitempty"`
+	Status          LeaveStatus `json:"status"`
+	RejectionReason string      `json:"rejection_reason,omitempty"`
+	ApprovedBy      *uint64     `json:"approved_by,omitempty"`
+	CreatedAt       time.Time   `json:"created_at"`
 }
 
 type AttendanceStatus string

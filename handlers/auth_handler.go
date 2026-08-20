@@ -38,14 +38,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		id           uint64
 		name         string
 		email        sql.NullString
+		photoURL     sql.NullString
 		passwordHash string
 		role         string
 		isActive     bool
 	)
 
-	query := `SELECT id, name, email, password_hash, role, is_active
+	query := `SELECT id, name, email, photo_url, password_hash, role, is_active
 	          FROM users WHERE nip = ? LIMIT 1`
-	err := config.DB.QueryRow(query, req.NIP).Scan(&id, &name, &email, &passwordHash, &role, &isActive)
+	err := config.DB.QueryRow(query, req.NIP).Scan(&id, &name, &email, &photoURL, &passwordHash, &role, &isActive)
 	if err == sql.ErrNoRows {
 		utils.Error(w, http.StatusUnauthorized, "NIP atau password salah")
 		return
@@ -73,10 +74,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	utils.Success(w, http.StatusOK, "Login berhasil", LoginResponse{
 		Token: token,
 		User: map[string]interface{}{
-			"id":    id,
-			"name":  name,
-			"email": email.String,
-			"role":  role,
+			"id":        id,
+			"name":      name,
+			"email":     email.String,
+			"photo_url": photoURL.String,
+			"role":      role,
 		},
 	})
 }

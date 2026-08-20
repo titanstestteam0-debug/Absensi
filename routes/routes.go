@@ -16,6 +16,16 @@ func SetupRouter() *mux.Router {
 	// -------------------- Public --------------------
 	api.HandleFunc("/auth/login", handlers.Login).Methods(http.MethodPost)
 
+	// -------------------- Profil (butuh login, semua role) --------------------
+	// Setiap user yang login (admin, guru, guru_pengganti) bisa lihat & update
+	// foto profilnya sendiri lewat endpoint ini.
+	me := api.PathPrefix("").Subrouter()
+	me.Use(middleware.JWTAuth)
+	me.Use(middleware.RequireAnyRole("admin", "guru", "guru_pengganti"))
+
+	me.HandleFunc("/profile", handlers.GetProfile).Methods(http.MethodGet)
+	me.HandleFunc("/profile/photo", handlers.UpdateProfilePhoto).Methods(http.MethodPut)
+
 	// -------------------- Guru & Guru Pengganti (butuh login) --------------------
 	// Guru Pengganti (Inval) memakai endpoint yang sama persis dengan Guru
 	// utama untuk presensi (dengan substitute_for_id) dan pengajuan cuti,
@@ -42,12 +52,15 @@ func SetupRouter() *mux.Router {
 	admin.HandleFunc("/teachers", handlers.CreateTeacher).Methods(http.MethodPost)
 	admin.HandleFunc("/teachers/{id}", handlers.UpdateTeacher).Methods(http.MethodPut)
 	admin.HandleFunc("/teachers/{id}", handlers.DeleteTeacher).Methods(http.MethodDelete)
+	admin.HandleFunc("/teachers/{id}/activate", handlers.ActivateTeacher).Methods(http.MethodPut)
 
 	// Master data ruangan + generator QR
 	admin.HandleFunc("/rooms", handlers.ListRooms).Methods(http.MethodGet)
 	admin.HandleFunc("/rooms", handlers.CreateRoom).Methods(http.MethodPost)
 	admin.HandleFunc("/rooms/{id}", handlers.UpdateRoom).Methods(http.MethodPut)
 	admin.HandleFunc("/rooms/{id}", handlers.DeleteRoom).Methods(http.MethodDelete)
+	admin.HandleFunc("/rooms/{id}/qr", handlers.GetRoomQR).Methods(http.MethodGet)
+	admin.HandleFunc("/rooms/{id}/refresh-qr", handlers.RefreshRoomQR).Methods(http.MethodPost)
 
 	// Jadwal
 	admin.HandleFunc("/schedules", handlers.ListSchedules).Methods(http.MethodGet)

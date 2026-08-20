@@ -16,6 +16,7 @@ CREATE TABLE users (
     name            VARCHAR(150)        NOT NULL,
     nip             VARCHAR(50)         NOT NULL UNIQUE,
     email           VARCHAR(150)        NULL UNIQUE,
+    photo_url       LONGTEXT            NULL,        -- foto profil (data URI base64), diisi guru sendiri
     password_hash   VARCHAR(255)        NOT NULL,
     role            ENUM('admin', 'guru', 'guru_pengganti') NOT NULL DEFAULT 'guru',
     is_active       TINYINT(1)          NOT NULL DEFAULT 1,
@@ -29,13 +30,15 @@ CREATE TABLE users (
 -- rooms: Ruangan kelas, masing-masing punya QR string unik
 -- ---------------------------------------------------------------------
 CREATE TABLE rooms (
-    id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name        VARCHAR(100)    NOT NULL,
-    qr_string   VARCHAR(191)    NOT NULL UNIQUE,
-    is_active   TINYINT(1)      NOT NULL DEFAULT 1,
-    created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
-                                 ON UPDATE CURRENT_TIMESTAMP
+    id                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name                VARCHAR(100)    NOT NULL,
+    qr_string           VARCHAR(191)    NOT NULL UNIQUE,
+    qr_expires_at       DATETIME        NULL,        -- kapan qr_string saat ini kedaluwarsa & wajib rotasi
+    qr_last_rotated_at  DATETIME        NULL,         -- kapan terakhir kali qr_string diganti
+    is_active           TINYINT(1)      NOT NULL DEFAULT 1,
+    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                         ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
@@ -53,7 +56,8 @@ CREATE TABLE settings (
 
 INSERT INTO settings (config_key, config_value, description) VALUES
     ('jp_duration_minutes', '45', 'Durasi aktual 1 Jam Pelajaran (menit)'),
-    ('early_scan_tolerance_minutes', '60', 'Batas toleransi scan masuk sebelum jadwal dimulai (menit)');
+    ('early_scan_tolerance_minutes', '60', 'Batas toleransi scan masuk sebelum jadwal dimulai (menit)'),
+    ('qr_rotation_seconds', '20', 'Interval otomatis QR Code ruangan berganti (detik), agar QR yang difoto/discreenshot cepat kedaluwarsa dan tidak bisa dipakai scan dari rumah');
 
 -- ---------------------------------------------------------------------
 -- schedules: Jadwal mengajar per guru
@@ -92,6 +96,7 @@ CREATE TABLE leaves (
     reason        TEXT            NULL,
     attachment_url VARCHAR(255)   NULL,
     status        ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    rejection_reason TEXT         NULL,               -- diisi admin saat menolak (wajib dari sisi aplikasi)
     approved_by   BIGINT UNSIGNED NULL,
     approved_at   DATETIME        NULL,
     created_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,

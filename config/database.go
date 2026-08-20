@@ -19,7 +19,7 @@ var DB *sql.DB
 //
 // DB_TLS_MODE:
 //   - "true"        -> TLS wajib, verifikasi sertifikat pakai root CA sistem
-//                       (INI YANG DIPAKAI TIDB CLOUD SERVERLESS)
+//     (INI YANG DIPAKAI TIDB CLOUD SERVERLESS)
 //   - "skip-verify"  -> TLS aktif tapi sertifikat tidak diverifikasi (hanya untuk debug)
 //   - "false"/kosong -> tanpa TLS (dipakai untuk MySQL lokal / XAMPP)
 func ConnectDB() {

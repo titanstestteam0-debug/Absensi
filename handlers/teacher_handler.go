@@ -34,7 +34,7 @@ func isValidRole(role string) bool {
 
 // GET /api/admin/teachers
 func ListTeachers(w http.ResponseWriter, r *http.Request) {
-	rows, err := config.DB.Query(`SELECT id, name, nip, email, role, is_active, created_at
+	rows, err := config.DB.Query(`SELECT id, name, nip, email, photo_url, role, is_active, created_at
 	                               FROM users ORDER BY name ASC`)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, "Gagal mengambil data guru: "+err.Error())
@@ -46,11 +46,13 @@ func ListTeachers(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var u models.User
 		var email sql.NullString
-		if err := rows.Scan(&u.ID, &u.Name, &u.NIP, &email, &u.Role, &u.IsActive, &u.CreatedAt); err != nil {
+		var photoURL sql.NullString
+		if err := rows.Scan(&u.ID, &u.Name, &u.NIP, &email, &photoURL, &u.Role, &u.IsActive, &u.CreatedAt); err != nil {
 			utils.Error(w, http.StatusInternalServerError, "Gagal membaca data: "+err.Error())
 			return
 		}
 		u.Email = email.String
+		u.PhotoURL = photoURL.String
 		teachers = append(teachers, u)
 	}
 
@@ -150,4 +152,23 @@ func DeleteTeacher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.Success(w, http.StatusOK, "Guru berhasil dinonaktifkan", nil)
+}
+
+// PUT /api/admin/teachers/{id}/activate
+// Mengaktifkan kembali akun guru yang sebelumnya dinonaktifkan, supaya bisa
+// login dan presensi lagi.
+func ActivateTeacher(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "ID tidak valid")
+		return
+	}
+
+	if _, err := config.DB.Exec(`UPDATE users SET is_active = 1 WHERE id = ?`, id); err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Gagal mengaktifkan guru: "+err.Error())
+		return
+	}
+
+	utils.Success(w, http.StatusOK, "Guru berhasil diaktifkan", nil)
 }
