@@ -572,7 +572,7 @@
 					}
 				},
 				{
-					"name": "Delete (Nonaktifkan) Leave Type",
+					"name": "Delete Leave Type (permanen)",
 					"request": {
 						"method": "DELETE",
 						"header": [
@@ -582,20 +582,7 @@
 							}
 						],
 						"url": "{{base_url}}/admin/leave-types/1",
-						"description": "Soft-delete: menonaktifkan, bukan menghapus permanen, supaya riwayat cuti lama tetap tampil benar."
-					}
-				},
-				{
-					"name": "Activate Leave Type",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": "{{base_url}}/admin/leave-types/1/activate"
+						"description": "Hapus permanen jenis cuti/izin. Riwayat cuti lama yang memakai code ini tetap tampil (leave_type disimpan sebagai teks bebas), tapi jenisnya tidak lagi muncul di master data / dropdown guru."
 					}
 				}
 			]

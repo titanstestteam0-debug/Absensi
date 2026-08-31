@@ -215,8 +215,7 @@ Implementasi lengkap ada di `handlers/attendance_handler.go`.
 | PUT | `/api/admin/leaves/{id}/approve` | Admin | Setujui cuti |
 | PUT | `/api/admin/leaves/{id}/reject` | Admin | Tolak cuti |
 | GET/POST | `/api/admin/leave-types` | Admin | Master data jenis cuti/izin (semua, termasuk nonaktif) |
-| PUT/DELETE | `/api/admin/leave-types/{id}` | Admin | Update label / nonaktifkan jenis cuti |
-| PUT | `/api/admin/leave-types/{id}/activate` | Admin | Aktifkan kembali jenis cuti |
+| PUT/DELETE | `/api/admin/leave-types/{id}` | Admin | Update label / hapus permanen jenis cuti |
 | GET | `/api/admin/reports/monthly?month=&year=` | Admin | Rekap bulanan per guru |
 | GET | `/api/admin/reports/history?teacher_id=&start=&end=` | Admin | History log detail scan |
 | POST | `/api/attendance/scan-in` | Guru | Scan masuk (+ mode inval via `substitute_for_id`) |

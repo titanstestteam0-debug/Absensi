@@ -146,8 +146,10 @@ func UpdateLeaveType(w http.ResponseWriter, r *http.Request) {
 }
 
 // DELETE /api/admin/leave-types/{id}
-// Soft-delete (nonaktifkan) supaya riwayat pengajuan cuti lama yang masih
-// memakai jenis ini tetap bisa ditampilkan dengan benar.
+// Hapus permanen. Kalau ada riwayat cuti lama yang masih memakai code jenis
+// ini, tetap akan tampil (leaves.leave_type disimpan sebagai teks bebas,
+// bukan foreign key), hanya saja jenisnya tidak lagi muncul di master data
+// atau di dropdown form pengajuan guru.
 func DeleteLeaveType(w http.ResponseWriter, r *http.Request) {
 	idStr := mux.Vars(r)["id"]
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -156,27 +158,10 @@ func DeleteLeaveType(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := config.DB.Exec(`UPDATE leave_types SET is_active = 0 WHERE id = ?`, id); err != nil {
-		utils.Error(w, http.StatusInternalServerError, "Gagal menonaktifkan jenis cuti/izin: "+err.Error())
+	if _, err := config.DB.Exec(`DELETE FROM leave_types WHERE id = ?`, id); err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Gagal menghapus jenis cuti/izin: "+err.Error())
 		return
 	}
 
-	utils.Success(w, http.StatusOK, "Jenis cuti/izin berhasil dinonaktifkan", nil)
-}
-
-// PUT /api/admin/leave-types/{id}/activate
-func ActivateLeaveType(w http.ResponseWriter, r *http.Request) {
-	idStr := mux.Vars(r)["id"]
-	id, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
-		utils.Error(w, http.StatusBadRequest, "ID tidak valid")
-		return
-	}
-
-	if _, err := config.DB.Exec(`UPDATE leave_types SET is_active = 1 WHERE id = ?`, id); err != nil {
-		utils.Error(w, http.StatusInternalServerError, "Gagal mengaktifkan jenis cuti/izin: "+err.Error())
-		return
-	}
-
-	utils.Success(w, http.StatusOK, "Jenis cuti/izin berhasil diaktifkan", nil)
+	utils.Success(w, http.StatusOK, "Jenis cuti/izin berhasil dihapus", nil)
 }

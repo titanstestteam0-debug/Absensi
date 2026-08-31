@@ -83,7 +83,6 @@ func SetupRouter() *mux.Router {
 	admin.HandleFunc("/leave-types", handlers.CreateLeaveType).Methods(http.MethodPost)
 	admin.HandleFunc("/leave-types/{id}", handlers.UpdateLeaveType).Methods(http.MethodPut)
 	admin.HandleFunc("/leave-types/{id}", handlers.DeleteLeaveType).Methods(http.MethodDelete)
-	admin.HandleFunc("/leave-types/{id}/activate", handlers.ActivateLeaveType).Methods(http.MethodPut)
 
 	// Laporan
 	admin.HandleFunc("/reports/monthly", handlers.MonthlyReport).Methods(http.MethodGet)
