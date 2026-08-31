@@ -42,6 +42,10 @@ func SetupRouter() *mux.Router {
 	guru.HandleFunc("/leaves", handlers.ListMyLeaves).Methods(http.MethodGet)
 	guru.HandleFunc("/teachers", handlers.ListTeachers).Methods(http.MethodGet)
 
+	// Master data jenis cuti/izin (dipakai guru untuk mengisi dropdown form
+	// pengajuan cuti) -- hanya yang aktif yang ditampilkan.
+	guru.HandleFunc("/leave-types", handlers.ListActiveLeaveTypes).Methods(http.MethodGet)
+
 	// -------------------- Admin (butuh login + role admin) --------------------
 	admin := api.PathPrefix("/admin").Subrouter()
 	admin.Use(middleware.JWTAuth)
@@ -72,6 +76,14 @@ func SetupRouter() *mux.Router {
 	admin.HandleFunc("/leaves", handlers.ListAllLeaves).Methods(http.MethodGet)
 	admin.HandleFunc("/leaves/{id}/approve", handlers.ApproveLeave).Methods(http.MethodPut)
 	admin.HandleFunc("/leaves/{id}/reject", handlers.RejectLeave).Methods(http.MethodPut)
+
+	// Master data jenis cuti/izin (dulunya hardcode di frontend, sekarang
+	// dikelola Admin lewat dashboard)
+	admin.HandleFunc("/leave-types", handlers.ListLeaveTypes).Methods(http.MethodGet)
+	admin.HandleFunc("/leave-types", handlers.CreateLeaveType).Methods(http.MethodPost)
+	admin.HandleFunc("/leave-types/{id}", handlers.UpdateLeaveType).Methods(http.MethodPut)
+	admin.HandleFunc("/leave-types/{id}", handlers.DeleteLeaveType).Methods(http.MethodDelete)
+	admin.HandleFunc("/leave-types/{id}/activate", handlers.ActivateLeaveType).Methods(http.MethodPut)
 
 	// Laporan
 	admin.HandleFunc("/reports/monthly", handlers.MonthlyReport).Methods(http.MethodGet)

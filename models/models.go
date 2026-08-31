@@ -23,11 +23,22 @@ type User struct {
 }
 
 type Room struct {
-	ID          uint64     `json:"id"`
-	Name        string     `json:"name"`
-	QRString    string     `json:"qr_string"`
-	IsActive    bool       `json:"is_active"`
-	QRExpiresAt *time.Time `json:"qr_expires_at,omitempty"`
+	ID              uint64     `json:"id"`
+	Name            string     `json:"name"`
+	QRString        string     `json:"qr_string"`
+	IsActive        bool       `json:"is_active"`
+	QRLastRotatedAt *time.Time `json:"qr_last_rotated_at,omitempty"`
+}
+
+// LeaveType adalah master data jenis cuti/izin yang bisa dikelola Admin lewat
+// dashboard (bukan hardcode di frontend). code dipakai sebagai nilai yang
+// disimpan di leaves.leave_type, label untuk ditampilkan ke pengguna.
+type LeaveType struct {
+	ID        uint64    `json:"id"`
+	Code      string    `json:"code"`
+	Label     string    `json:"label"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Schedule struct {

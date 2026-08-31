@@ -29,12 +29,15 @@ CREATE TABLE users (
 -- ---------------------------------------------------------------------
 -- rooms: Ruangan kelas, masing-masing punya QR string unik
 -- ---------------------------------------------------------------------
+-- qr_string TIDAK pernah berubah otomatis -- hanya berganti kalau admin
+-- menekan tombol "Refresh Sekarang" di halaman QR Live (lihat
+-- handlers/room_handler.go), supaya QR yang sudah dicetak/ditempel di kelas
+-- tetap valid dan bisa dipakai berulang kali.
 CREATE TABLE rooms (
     id                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name                VARCHAR(100)    NOT NULL,
     qr_string           VARCHAR(191)    NOT NULL UNIQUE,
-    qr_expires_at       DATETIME        NULL,        -- kapan qr_string saat ini kedaluwarsa & wajib rotasi
-    qr_last_rotated_at  DATETIME        NULL,         -- kapan terakhir kali qr_string diganti
+    qr_last_rotated_at  DATETIME        NULL,         -- kapan terakhir kali qr_string diganti (dibuat/direfresh manual)
     is_active           TINYINT(1)      NOT NULL DEFAULT 1,
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -56,8 +59,26 @@ CREATE TABLE settings (
 
 INSERT INTO settings (config_key, config_value, description) VALUES
     ('jp_duration_minutes', '45', 'Durasi aktual 1 Jam Pelajaran (menit)'),
-    ('early_scan_tolerance_minutes', '60', 'Batas toleransi scan masuk sebelum jadwal dimulai (menit)'),
-    ('qr_rotation_seconds', '20', 'Interval otomatis QR Code ruangan berganti (detik), agar QR yang difoto/discreenshot cepat kedaluwarsa dan tidak bisa dipakai scan dari rumah');
+    ('early_scan_tolerance_minutes', '60', 'Batas toleransi scan masuk sebelum jadwal dimulai (menit)');
+
+-- ---------------------------------------------------------------------
+-- leave_types: Master data jenis cuti/izin, dikelola Admin lewat dashboard
+-- (bukan hardcode di kode frontend). code dipakai sebagai nilai yang
+-- disimpan di leaves.leave_type, label untuk ditampilkan ke pengguna.
+-- ---------------------------------------------------------------------
+CREATE TABLE leave_types (
+    id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    code         VARCHAR(50)   NOT NULL UNIQUE,
+    label        VARCHAR(100)  NOT NULL,
+    is_active    TINYINT(1)    NOT NULL DEFAULT 1,
+    created_at   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+INSERT INTO leave_types (code, label) VALUES
+    ('sakit', 'Sakit'),
+    ('dinas_luar', 'Izin Dinas Luar');
 
 -- ---------------------------------------------------------------------
 -- schedules: Jadwal mengajar per guru

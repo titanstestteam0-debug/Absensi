@@ -205,13 +205,18 @@ Implementasi lengkap ada di `handlers/attendance_handler.go`.
 | POST | `/api/auth/login` | Publik | Login, dapat JWT |
 | GET/POST | `/api/admin/teachers` | Admin | CRUD guru |
 | PUT/DELETE | `/api/admin/teachers/{id}` | Admin | Update / nonaktifkan guru |
-| GET/POST | `/api/admin/rooms` | Admin | CRUD ruangan + generate QR |
+| GET/POST | `/api/admin/rooms` | Admin | CRUD ruangan + generate QR awal |
 | PUT/DELETE | `/api/admin/rooms/{id}` | Admin | Update / nonaktifkan ruangan |
+| GET | `/api/admin/rooms/{id}/qr` | Admin | Ambil qr_string ruangan saat ini (tanpa efek samping, tidak merotasi) |
+| POST | `/api/admin/rooms/{id}/refresh-qr` | Admin | Satu-satunya cara qr_string berganti — dipanggil manual saat admin klik "Refresh Sekarang" |
 | GET/POST | `/api/admin/schedules` | Admin | CRUD jadwal |
 | PUT/DELETE | `/api/admin/schedules/{id}` | Admin | Update / nonaktifkan jadwal |
 | GET | `/api/admin/leaves` | Admin | Semua pengajuan cuti |
 | PUT | `/api/admin/leaves/{id}/approve` | Admin | Setujui cuti |
 | PUT | `/api/admin/leaves/{id}/reject` | Admin | Tolak cuti |
+| GET/POST | `/api/admin/leave-types` | Admin | Master data jenis cuti/izin (semua, termasuk nonaktif) |
+| PUT/DELETE | `/api/admin/leave-types/{id}` | Admin | Update label / nonaktifkan jenis cuti |
+| PUT | `/api/admin/leave-types/{id}/activate` | Admin | Aktifkan kembali jenis cuti |
 | GET | `/api/admin/reports/monthly?month=&year=` | Admin | Rekap bulanan per guru |
 | GET | `/api/admin/reports/history?teacher_id=&start=&end=` | Admin | History log detail scan |
 | POST | `/api/attendance/scan-in` | Guru | Scan masuk (+ mode inval via `substitute_for_id`) |
@@ -219,6 +224,7 @@ Implementasi lengkap ada di `handlers/attendance_handler.go`.
 | GET | `/api/attendance/history` | Guru | Riwayat presensi sendiri |
 | POST | `/api/leaves` | Guru | Ajukan cuti/izin |
 | GET | `/api/leaves` | Guru | Riwayat cuti sendiri |
+| GET | `/api/leave-types` | Guru | Jenis cuti/izin yang aktif (untuk dropdown form pengajuan) |
 
 ## 7. Catatan untuk Akbar (Flutter) & Daniel (Svelte)
 
