@@ -212,12 +212,16 @@ Implementasi lengkap ada di `handlers/attendance_handler.go`.
 | GET/POST | `/api/admin/schedules` | Admin | CRUD jadwal |
 | PUT/DELETE | `/api/admin/schedules/{id}` | Admin | Update / nonaktifkan jadwal |
 | GET | `/api/admin/leaves` | Admin | Semua pengajuan cuti |
+| POST | `/api/admin/leaves` | Admin | Bantu ajukan cuti atas nama guru — LANGSUNG approved (tanpa alur pending) |
 | PUT | `/api/admin/leaves/{id}/approve` | Admin | Setujui cuti |
 | PUT | `/api/admin/leaves/{id}/reject` | Admin | Tolak cuti |
 | GET/POST | `/api/admin/leave-types` | Admin | Master data jenis cuti/izin (semua, termasuk nonaktif) |
 | PUT/DELETE | `/api/admin/leave-types/{id}` | Admin | Update label / hapus permanen jenis cuti |
-| GET | `/api/admin/reports/monthly?month=&year=` | Admin | Rekap bulanan per guru |
+| GET | `/api/admin/reports/monthly?month=&year=` | Admin | Rekap bulanan per guru (+ info sesi sbg/digantikan guru pengganti & jumlah cuti) |
 | GET | `/api/admin/reports/history?teacher_id=&start=&end=` | Admin | History log detail scan |
+| GET | `/api/admin/reports/daily?year=&month=&start_day=` | Admin | Laporan absensi harian, tgl 1 s/d hari ini (start_day bisa digeser, tetap di bulan yang sama) |
+| GET | `/api/admin/reports/substitutes?start=&end=&teacher_id=` | Admin | Rekap sesi sebagai guru pengganti (inval) — tidak terikat target JP |
+| GET | `/api/admin/reports/annual?year=&teacher_id=` | Admin | Laporan tahunan/individu per guru — breakdown 12 bulan, konsistensi kehadiran, jumlah cuti |
 | POST | `/api/attendance/scan-in` | Guru | Scan masuk (+ mode inval via `substitute_for_id`) |
 | POST | `/api/attendance/scan-out` | Guru | Scan keluar |
 | GET | `/api/attendance/history` | Guru | Riwayat presensi sendiri |

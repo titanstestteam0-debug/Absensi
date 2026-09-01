@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -15,6 +16,17 @@ import (
 )
 
 type LeaveRequest struct {
+	StartDate     string `json:"start_date"`
+	EndDate       string `json:"end_date"`
+	LeaveType     string `json:"leave_type"`
+	Reason        string `json:"reason"`
+	AttachmentURL string `json:"attachment_url"`
+}
+
+// AdminLeaveRequest sama seperti LeaveRequest tapi admin juga menentukan
+// guru mana yang diajukan cutinya.
+type AdminLeaveRequest struct {
+	TeacherID     uint64 `json:"teacher_id"`
 	StartDate     string `json:"start_date"`
 	EndDate       string `json:"end_date"`
 	LeaveType     string `json:"leave_type"`
@@ -79,6 +91,58 @@ func ListMyLeaves(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.Success(w, http.StatusOK, "Berhasil mengambil riwayat cuti", leaves)
+}
+
+// POST /api/admin/leaves
+// Admin membantu mengajukan cuti/izin atas nama seorang guru, LANGSUNG
+// berstatus 'approved' -- tanpa perlu melalui alur persetujuan pending
+// seperti pengajuan mandiri oleh guru (mis. untuk kondisi darurat/mendadak
+// yang sudah dikomunikasikan langsung ke admin/kepala sekolah).
+func AdminCreateLeave(w http.ResponseWriter, r *http.Request) {
+	adminID := middleware.GetUserID(r)
+
+	var req AdminLeaveRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.Error(w, http.StatusBadRequest, "Body request tidak valid")
+		return
+	}
+	if req.TeacherID == 0 || req.StartDate == "" || req.EndDate == "" || req.LeaveType == "" {
+		utils.Error(w, http.StatusBadRequest, "teacher_id, start_date, end_date, dan leave_type wajib diisi")
+		return
+	}
+
+	// Pastikan guru yang dituju benar-benar ada (dan bukan sesama admin).
+	var teacherName, teacherRole string
+	err := config.DB.QueryRow(`SELECT name, role FROM users WHERE id = ?`, req.TeacherID).
+		Scan(&teacherName, &teacherRole)
+	if err == sql.ErrNoRows {
+		utils.Error(w, http.StatusNotFound, "Guru tidak ditemukan")
+		return
+	} else if err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Gagal memeriksa data guru: "+err.Error())
+		return
+	}
+	if teacherRole != string(models.RoleGuru) && teacherRole != string(models.RoleGuruPengganti) {
+		utils.Error(w, http.StatusBadRequest, "Cuti hanya bisa diajukan untuk akun bertipe guru/guru pengganti")
+		return
+	}
+
+	result, err := config.DB.Exec(
+		`INSERT INTO leaves (teacher_id, start_date, end_date, leave_type, reason, attachment_url, status, approved_by, approved_at)
+		 VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, NOW())`,
+		req.TeacherID, req.StartDate, req.EndDate, req.LeaveType, req.Reason, req.AttachmentURL, adminID,
+	)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Gagal mengajukan cuti untuk guru: "+err.Error())
+		return
+	}
+
+	id, _ := result.LastInsertId()
+	utils.Success(w, http.StatusCreated, "Cuti untuk "+teacherName+" berhasil diajukan & otomatis disetujui", map[string]interface{}{
+		"id":         id,
+		"teacher_id": req.TeacherID,
+		"status":     "approved",
+	})
 }
 
 // GET /api/admin/leaves  (Admin melihat semua pengajuan cuti)

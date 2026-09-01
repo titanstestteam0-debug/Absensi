@@ -422,6 +422,28 @@
 			"name": "Leaves / Cuti",
 			"item": [
 				{
+					"name": "Bantu Ajukan Cuti untuk Guru (Admin, Auto-Approve)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{base_url}}/admin/leaves",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"teacher_id\": 2,\n  \"start_date\": \"2026-08-10\",\n  \"end_date\": \"2026-08-10\",\n  \"leave_type\": \"sakit\",\n  \"reason\": \"Mendadak sakit, dikoordinasikan langsung via telepon ke admin\"\n}"
+						},
+						"description": "Admin mengajukan cuti atas nama guru. Statusnya LANGSUNG 'approved' -- tidak melalui alur pending->approve seperti pengajuan mandiri oleh guru."
+					}
+				},
+				{
 					"name": "Ajukan Cuti (Guru)",
 					"request": {
 						"method": "POST",
@@ -658,6 +680,48 @@
 								}
 							]
 						}
+					}
+				},
+				{
+					"name": "Laporan Absensi Harian",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": "{{base_url}}/admin/reports/daily?year=2026&month=8&start_day=1",
+						"description": "Rekap per tanggal (bukan per guru), dari start_day s/d hari ini (kalau bulan berjalan) atau akhir bulan (kalau bulan sudah lewat). start_day tidak boleh keluar dari bulan yang dipilih."
+					}
+				},
+				{
+					"name": "Rekap sebagai Guru Pengganti",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": "{{base_url}}/admin/reports/substitutes?start=2026-08-01&end=2026-08-31&teacher_id=5",
+						"description": "Semua sesi di mana seseorang bertindak sebagai guru pengganti. Sengaja tidak menampilkan status tuntas/tidak_tuntas atau target JP -- sesi inval tidak terikat target JP guru utama. teacher_id opsional (filter berdasarkan siapa yang jadi pengganti)."
+					}
+				},
+				{
+					"name": "Laporan Tahunan / Individu per Guru",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": "{{base_url}}/admin/reports/annual?year=2026&teacher_id=5",
+						"description": "Breakdown 12 bulan untuk 1 guru: jadwal tetap, sesi sebagai guru pengganti, jumlah cuti per bulan, dan indikator konsisten (tidak pernah tidak_tuntas). Dipakai sebagai dasar 'Laporan CSV Individu' di frontend."
 					}
 				}
 			]

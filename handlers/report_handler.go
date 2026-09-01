@@ -3,41 +3,84 @@ package handlers
 import (
 	"database/sql"
 	"net/http"
+	"strconv"
+	"time"
 
 	"absensi-backend/config"
 	"absensi-backend/middleware"
 	"absensi-backend/utils"
 )
 
+// monthBounds mengembalikan tanggal pertama & terakhir (format YYYY-MM-DD)
+// dari sebuah bulan-tahun, dipakai bersama oleh beberapa endpoint laporan
+// supaya perhitungan rentang tanggal konsisten (pakai time.Date, bukan
+// string manipulation, supaya otomatis benar untuk bulan 28/29/30/31 hari).
+func monthBounds(year, month int) (firstDay string, lastDay string) {
+	first := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
+	last := first.AddDate(0, 1, -1)
+	return first.Format("2006-01-02"), last.Format("2006-01-02")
+}
+
 // GET /api/admin/reports/monthly?month=7&year=2026
-// Rekap total jam mengajar aktual vs jadwal per guru dalam 1 bulan.
+// Rekap total jam mengajar aktual vs jadwal per guru dalam 1 bulan, plus
+// info seberapa sering guru tsb bertindak sebagai/mempunyai guru pengganti,
+// dan berapa kali ia mengajukan cuti pada bulan tsb.
 func MonthlyReport(w http.ResponseWriter, r *http.Request) {
-	month := r.URL.Query().Get("month")
-	year := r.URL.Query().Get("year")
-	if month == "" || year == "" {
+	monthStr := r.URL.Query().Get("month")
+	yearStr := r.URL.Query().Get("year")
+	if monthStr == "" || yearStr == "" {
 		utils.Error(w, http.StatusBadRequest, "Parameter month dan year wajib diisi (contoh: ?month=7&year=2026)")
 		return
 	}
+	month, err1 := strconv.Atoi(monthStr)
+	year, err2 := strconv.Atoi(yearStr)
+	if err1 != nil || err2 != nil || month < 1 || month > 12 {
+		utils.Error(w, http.StatusBadRequest, "Parameter month/year tidak valid")
+		return
+	}
+	firstDay, lastDay := monthBounds(year, month)
 
 	query := `
 		SELECT
 			u.id AS teacher_id,
 			u.name AS teacher_name,
+			u.role AS teacher_role,
 			COUNT(a.id) AS total_sesi,
 			SUM(CASE WHEN a.status = 'tuntas' THEN 1 ELSE 0 END) AS sesi_tuntas,
 			SUM(CASE WHEN a.status = 'tidak_tuntas' THEN 1 ELSE 0 END) AS sesi_tidak_tuntas,
 			IFNULL(SUM(a.actual_jp), 0) AS total_jp_aktual,
-			IFNULL(SUM(s.target_jp), 0) AS total_jp_target
+			IFNULL(SUM(s.target_jp), 0) AS total_jp_target,
+			-- Berapa kali guru ini TAMPIL SEBAGAI GURU PENGGANTI (menggantikan
+			-- guru lain) bulan ini. Sengaja TIDAK dibandingkan dengan target JP
+			-- apapun -- sesi inval bersifat ad-hoc, bukan jadwal tetap dia.
+			(SELECT COUNT(*) FROM attendances a2
+			   WHERE a2.substitute_teacher_id = u.id AND a2.date BETWEEN ? AND ?) AS sesi_sebagai_pengganti,
+			(SELECT IFNULL(SUM(a2.actual_jp), 0) FROM attendances a2
+			   WHERE a2.substitute_teacher_id = u.id AND a2.date BETWEEN ? AND ?) AS jp_sebagai_pengganti,
+			-- Berapa kali jadwal guru ini DIGANTIKAN oleh guru pengganti bulan ini.
+			(SELECT COUNT(*) FROM attendances a3
+			   WHERE a3.teacher_id = u.id AND a3.substitute_teacher_id IS NOT NULL
+			     AND a3.date BETWEEN ? AND ?) AS sesi_digantikan,
+			-- Berapa kali pengajuan cuti (disetujui) yang bersinggungan dengan bulan ini.
+			(SELECT COUNT(*) FROM leaves l
+			   WHERE l.teacher_id = u.id AND l.status = 'approved'
+			     AND l.start_date <= ? AND l.end_date >= ?) AS jumlah_cuti
 		FROM users u
 		LEFT JOIN attendances a
 			ON a.teacher_id = u.id
-			AND MONTH(a.date) = ? AND YEAR(a.date) = ?
+			AND a.date BETWEEN ? AND ?
 		LEFT JOIN schedules s ON s.id = a.schedule_id
 		WHERE u.role IN ('guru', 'guru_pengganti')
-		GROUP BY u.id, u.name
+		GROUP BY u.id, u.name, u.role
 		ORDER BY u.name ASC`
 
-	rows, err := config.DB.Query(query, month, year)
+	rows, err := config.DB.Query(query,
+		firstDay, lastDay, // sesi_sebagai_pengganti
+		firstDay, lastDay, // jp_sebagai_pengganti
+		firstDay, lastDay, // sesi_digantikan
+		lastDay, firstDay, // jumlah_cuti (overlap: start<=lastDay AND end>=firstDay)
+		firstDay, lastDay, // JOIN attendances utama
+	)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, "Gagal membuat laporan bulanan: "+err.Error())
 		return
@@ -45,20 +88,26 @@ func MonthlyReport(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type teacherRecap struct {
-		TeacherID       uint64  `json:"teacher_id"`
-		TeacherName     string  `json:"teacher_name"`
-		TotalSesi       int     `json:"total_sesi"`
-		SesiTuntas      int     `json:"sesi_tuntas"`
-		SesiTidakTuntas int     `json:"sesi_tidak_tuntas"`
-		TotalJPAktual   float64 `json:"total_jp_aktual"`
-		TotalJPTarget   float64 `json:"total_jp_target"`
+		TeacherID            uint64  `json:"teacher_id"`
+		TeacherName          string  `json:"teacher_name"`
+		TeacherRole          string  `json:"teacher_role"`
+		TotalSesi            int     `json:"total_sesi"`
+		SesiTuntas           int     `json:"sesi_tuntas"`
+		SesiTidakTuntas      int     `json:"sesi_tidak_tuntas"`
+		TotalJPAktual        float64 `json:"total_jp_aktual"`
+		TotalJPTarget        float64 `json:"total_jp_target"`
+		SesiSebagaiPengganti int     `json:"sesi_sebagai_pengganti"`
+		JPSebagaiPengganti   float64 `json:"jp_sebagai_pengganti"`
+		SesiDigantikan       int     `json:"sesi_digantikan"`
+		JumlahCuti           int     `json:"jumlah_cuti"`
 	}
 
 	var recap []teacherRecap
 	for rows.Next() {
 		var t teacherRecap
-		if err := rows.Scan(&t.TeacherID, &t.TeacherName, &t.TotalSesi, &t.SesiTuntas,
-			&t.SesiTidakTuntas, &t.TotalJPAktual, &t.TotalJPTarget); err != nil {
+		if err := rows.Scan(&t.TeacherID, &t.TeacherName, &t.TeacherRole, &t.TotalSesi, &t.SesiTuntas,
+			&t.SesiTidakTuntas, &t.TotalJPAktual, &t.TotalJPTarget,
+			&t.SesiSebagaiPengganti, &t.JPSebagaiPengganti, &t.SesiDigantikan, &t.JumlahCuti); err != nil {
 			utils.Error(w, http.StatusInternalServerError, "Gagal membaca data laporan: "+err.Error())
 			return
 		}

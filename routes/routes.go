@@ -74,6 +74,9 @@ func SetupRouter() *mux.Router {
 
 	// Cuti/izin
 	admin.HandleFunc("/leaves", handlers.ListAllLeaves).Methods(http.MethodGet)
+	// Admin bisa langsung mengajukan+menyetujui cuti atas nama guru (tanpa
+	// alur pending->approve), misalnya untuk kondisi darurat mendadak.
+	admin.HandleFunc("/leaves", handlers.AdminCreateLeave).Methods(http.MethodPost)
 	admin.HandleFunc("/leaves/{id}/approve", handlers.ApproveLeave).Methods(http.MethodPut)
 	admin.HandleFunc("/leaves/{id}/reject", handlers.RejectLeave).Methods(http.MethodPut)
 
@@ -87,6 +90,9 @@ func SetupRouter() *mux.Router {
 	// Laporan
 	admin.HandleFunc("/reports/monthly", handlers.MonthlyReport).Methods(http.MethodGet)
 	admin.HandleFunc("/reports/history", handlers.HistoryLog).Methods(http.MethodGet)
+	admin.HandleFunc("/reports/daily", handlers.DailyAttendanceReport).Methods(http.MethodGet)
+	admin.HandleFunc("/reports/substitutes", handlers.SubstituteSessionsReport).Methods(http.MethodGet)
+	admin.HandleFunc("/reports/annual", handlers.AnnualTeacherReport).Methods(http.MethodGet)
 
 	return r
 }
