@@ -89,6 +89,8 @@ CREATE TABLE schedules (
     teacher_id   BIGINT UNSIGNED NOT NULL,
     room_id      BIGINT UNSIGNED NOT NULL,
     day_of_week  TINYINT UNSIGNED NOT NULL,
+    period_month TINYINT UNSIGNED NOT NULL,       -- 1-12, bulan berlakunya jadwal ini
+    period_year  SMALLINT UNSIGNED NOT NULL,      -- tahun berlakunya jadwal ini
     start_time   TIME            NOT NULL,
     end_time     TIME            NOT NULL,
     target_jp    INT UNSIGNED    NOT NULL,
@@ -102,7 +104,8 @@ CREATE TABLE schedules (
     CONSTRAINT fk_schedules_room FOREIGN KEY (room_id) REFERENCES rooms(id)
         ON DELETE RESTRICT,
     INDEX idx_schedules_teacher_day (teacher_id, day_of_week),
-    INDEX idx_schedules_room_day (room_id, day_of_week)
+    INDEX idx_schedules_room_day (room_id, day_of_week),
+    INDEX idx_schedules_period (period_year, period_month)
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------

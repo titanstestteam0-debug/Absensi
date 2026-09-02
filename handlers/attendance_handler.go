@@ -132,9 +132,10 @@ func ScanIn(w http.ResponseWriter, r *http.Request) {
 	rows, err := config.DB.Query(
 		`SELECT id, teacher_id, start_time, end_time, target_jp
 		 FROM schedules
-		 WHERE teacher_id = ? AND room_id = ? AND day_of_week = ? AND is_active = 1
+		 WHERE teacher_id = ? AND room_id = ? AND day_of_week = ?
+		   AND period_month = ? AND period_year = ? AND is_active = 1
 		 ORDER BY start_time ASC`,
-		scheduleTeacherID, roomID, dow,
+		scheduleTeacherID, roomID, dow, int(now.Month()), now.Year(),
 	)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, "Gagal mencari jadwal: "+err.Error())

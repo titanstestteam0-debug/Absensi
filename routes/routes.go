@@ -68,9 +68,13 @@ func SetupRouter() *mux.Router {
 
 	// Jadwal
 	admin.HandleFunc("/schedules", handlers.ListSchedules).Methods(http.MethodGet)
+	// Daftar bulan-tahun yang punya jadwal tersimpan, dipakai buat mengisi
+	// filter "Bulan" di halaman Jadwal Mengajar (termasuk riwayat lama).
+	admin.HandleFunc("/schedules/periods", handlers.ListSchedulePeriods).Methods(http.MethodGet)
 	admin.HandleFunc("/schedules", handlers.CreateSchedule).Methods(http.MethodPost)
 	admin.HandleFunc("/schedules/{id}", handlers.UpdateSchedule).Methods(http.MethodPut)
 	admin.HandleFunc("/schedules/{id}", handlers.DeleteSchedule).Methods(http.MethodDelete)
+	admin.HandleFunc("/schedules/{id}/duplicate", handlers.DuplicateSchedule).Methods(http.MethodPost)
 
 	// Cuti/izin
 	admin.HandleFunc("/leaves", handlers.ListAllLeaves).Methods(http.MethodGet)

@@ -209,8 +209,10 @@ Implementasi lengkap ada di `handlers/attendance_handler.go`.
 | PUT/DELETE | `/api/admin/rooms/{id}` | Admin | Update / nonaktifkan ruangan |
 | GET | `/api/admin/rooms/{id}/qr` | Admin | Ambil qr_string ruangan saat ini (tanpa efek samping, tidak merotasi) |
 | POST | `/api/admin/rooms/{id}/refresh-qr` | Admin | Satu-satunya cara qr_string berganti — dipanggil manual saat admin klik "Refresh Sekarang" |
-| GET/POST | `/api/admin/schedules` | Admin | CRUD jadwal |
+| GET/POST | `/api/admin/schedules?month=&year=` | Admin | CRUD jadwal — jadwal terikat bulan/periode, default bulan berjalan kalau month/year tidak dikirim |
+| GET | `/api/admin/schedules/periods` | Admin | Daftar bulan-tahun yang punya jadwal tersimpan (buat mengisi filter Bulan) |
 | PUT/DELETE | `/api/admin/schedules/{id}` | Admin | Update / nonaktifkan jadwal |
+| POST | `/api/admin/schedules/{id}/duplicate` | Admin | Duplikasi 1 jadwal ke bulan/periode lain |
 | GET | `/api/admin/leaves` | Admin | Semua pengajuan cuti |
 | POST | `/api/admin/leaves` | Admin | Bantu ajukan cuti atas nama guru — LANGSUNG approved (tanpa alur pending) |
 | PUT | `/api/admin/leaves/{id}/approve` | Admin | Setujui cuti |

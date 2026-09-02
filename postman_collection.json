@@ -269,7 +269,22 @@
 								"value": "Bearer {{token}}"
 							}
 						],
-						"url": "{{base_url}}/admin/schedules"
+						"url": "{{base_url}}/admin/schedules?month=8&year=2026",
+						"description": "Jadwal terikat bulan/periode. Tanpa query month/year, default menampilkan bulan berjalan."
+					}
+				},
+				{
+					"name": "List Periode Jadwal (buat filter Bulan)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": "{{base_url}}/admin/schedules/periods",
+						"description": "Daftar semua bulan-tahun yang punya jadwal tersimpan (termasuk riwayat lama), dipakai untuk mengisi pilihan filter Bulan di frontend."
 					}
 				},
 				{
@@ -289,14 +304,14 @@
 						"url": "{{base_url}}/admin/schedules",
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"teacher_id\": 2,\n  \"room_id\": 1,\n  \"day_of_week\": 1,\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"10:30:00\",\n  \"target_jp\": 2,\n  \"subject\": \"Matematika\"\n}",
+							"raw": "{\n  \"teacher_id\": 2,\n  \"room_id\": 1,\n  \"day_of_week\": 1,\n  \"period_month\": 8,\n  \"period_year\": 2026,\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"10:30:00\",\n  \"target_jp\": 2,\n  \"subject\": \"Matematika\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
 								}
 							}
 						},
-						"description": "day_of_week: 1=Senin ... 7=Minggu"
+						"description": "day_of_week: 1=Senin ... 7=Minggu. period_month/period_year opsional -- default bulan & tahun berjalan kalau tidak dikirim."
 					}
 				},
 				{
@@ -316,8 +331,9 @@
 						"url": "{{base_url}}/admin/schedules/1",
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"teacher_id\": 2,\n  \"room_id\": 1,\n  \"day_of_week\": 1,\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"10:30:00\",\n  \"target_jp\": 2,\n  \"subject\": \"Matematika Lanjut\"\n}"
-						}
+							"raw": "{\n  \"teacher_id\": 2,\n  \"room_id\": 1,\n  \"day_of_week\": 1,\n  \"period_month\": 8,\n  \"period_year\": 2026,\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"10:30:00\",\n  \"target_jp\": 2,\n  \"subject\": \"Matematika Lanjut\"\n}"
+						},
+						"description": "day_of_week: 1=Senin ... 7=Minggu. period_month/period_year opsional -- default bulan & tahun berjalan kalau tidak dikirim."
 					}
 				},
 				{
@@ -331,6 +347,28 @@
 							}
 						],
 						"url": "{{base_url}}/admin/schedules/1"
+					}
+				},
+				{
+					"name": "Duplicate Schedule ke Periode Lain",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{base_url}}/admin/schedules/1/duplicate",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"period_month\": 9,\n  \"period_year\": 2026\n}"
+						},
+						"description": "Menduplikasi 1 baris jadwal (hari, jam, target JP, dst) ke bulan/periode lain, supaya admin tidak perlu input ulang dari nol tiap bulan baru."
 					}
 				}
 			]

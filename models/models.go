@@ -48,6 +48,8 @@ type Schedule struct {
 	RoomID      uint64 `json:"room_id"`
 	RoomName    string `json:"room_name,omitempty"`
 	DayOfWeek   int    `json:"day_of_week"` // 1=Senin ... 7=Minggu
+	PeriodMonth int    `json:"period_month"` // 1-12, bulan berlakunya jadwal ini
+	PeriodYear  int    `json:"period_year"`  // tahun berlakunya jadwal ini
 	StartTime   string `json:"start_time"`  // "HH:MM:SS"
 	EndTime     string `json:"end_time"`
 	TargetJP    int    `json:"target_jp"`
