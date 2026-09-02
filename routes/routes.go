@@ -15,6 +15,9 @@ func SetupRouter() *mux.Router {
 
 	// -------------------- Public --------------------
 	api.HandleFunc("/auth/login", handlers.Login).Methods(http.MethodPost)
+	// Identitas sekolah (nama & logo) dipakai buat render header & modal
+	// login SEBELUM user login, jadi sengaja tidak diwajibkan JWT.
+	api.HandleFunc("/settings/school", handlers.GetSchoolSettings).Methods(http.MethodGet)
 
 	// -------------------- Profil (butuh login, semua role) --------------------
 	// Setiap user yang login (admin, guru, guru_pengganti) bisa lihat & update
@@ -97,6 +100,13 @@ func SetupRouter() *mux.Router {
 	admin.HandleFunc("/reports/daily", handlers.DailyAttendanceReport).Methods(http.MethodGet)
 	admin.HandleFunc("/reports/substitutes", handlers.SubstituteSessionsReport).Methods(http.MethodGet)
 	admin.HandleFunc("/reports/annual", handlers.AnnualTeacherReport).Methods(http.MethodGet)
+
+	// Pengaturan (panel Settings ⚙️ di dashboard admin)
+	admin.HandleFunc("/settings/school", handlers.UpdateSchoolSettings).Methods(http.MethodPut)
+	admin.HandleFunc("/academic-years", handlers.ListAcademicYears).Methods(http.MethodGet)
+	admin.HandleFunc("/academic-years", handlers.CreateAcademicYear).Methods(http.MethodPost)
+	admin.HandleFunc("/academic-years/{id}/activate", handlers.ActivateAcademicYear).Methods(http.MethodPut)
+	admin.HandleFunc("/academic-years/{id}", handlers.DeleteAcademicYear).Methods(http.MethodDelete)
 
 	return r
 }

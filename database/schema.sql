@@ -162,3 +162,35 @@ CREATE TABLE attendances (
     UNIQUE KEY uq_attendance_per_day (schedule_id, date),
     INDEX idx_att_teacher_date (teacher_id, date)
 ) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------
+-- academic_years: Tahun Ajaran (mis. "2026/2027"). Hanya SATU yang boleh
+-- aktif dalam satu waktu -- tahun ajaran lain tetap bisa dibuat/disiapkan
+-- sebagai draft (mis. tahun depan), tapi belum "berlaku" sampai admin
+-- mengaktifkannya lewat panel Pengaturan.
+-- ---------------------------------------------------------------------
+CREATE TABLE academic_years (
+    id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    label       VARCHAR(20)       NOT NULL UNIQUE,  -- "2026/2027"
+    start_year  SMALLINT UNSIGNED NOT NULL,
+    end_year    SMALLINT UNSIGNED NOT NULL,
+    is_active   TINYINT(1)        NOT NULL DEFAULT 0,
+    created_at  DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                   ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------
+-- school_settings: identitas sekolah (nama & logo) untuk branding header
+-- aplikasi. Selalu SATU baris (id=1). Logo disimpan sebagai data URL
+-- base64 langsung di database (tidak perlu storage/file server terpisah).
+-- ---------------------------------------------------------------------
+CREATE TABLE school_settings (
+    id             TINYINT UNSIGNED PRIMARY KEY,
+    school_name    VARCHAR(150)  NULL,
+    logo_data_url  MEDIUMTEXT    NULL,
+    updated_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                  ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+INSERT INTO school_settings (id, school_name, logo_data_url) VALUES (1, NULL, NULL);

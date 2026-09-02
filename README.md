@@ -224,6 +224,17 @@ Implementasi lengkap ada di `handlers/attendance_handler.go`.
 | GET | `/api/admin/reports/daily?year=&month=&start_day=` | Admin | Laporan absensi harian, tgl 1 s/d hari ini (start_day bisa digeser, tetap di bulan yang sama) |
 | GET | `/api/admin/reports/substitutes?start=&end=&teacher_id=` | Admin | Rekap sesi sebagai guru pengganti (inval) — tidak terikat target JP |
 | GET | `/api/admin/reports/annual?year=&teacher_id=` | Admin | Laporan tahunan/individu per guru — breakdown 12 bulan, konsistensi kehadiran, jumlah cuti |
+
+### Pengaturan (Settings)
+
+| Method | Endpoint | Role | Keterangan |
+|---|---|---|---|
+| GET | `/api/settings/school` | Publik (tanpa login) | Ambil identitas sekolah (nama & logo) — dipakai render header sebelum login juga |
+| PUT | `/api/admin/settings/school` | Admin | Update nama sekolah & logo (logo dikirim sebagai data URL base64) |
+| GET | `/api/admin/academic-years` | Admin | List semua Tahun Ajaran (termasuk draft) |
+| POST | `/api/admin/academic-years` | Admin | Buat Tahun Ajaran baru sebagai draft (body: `{ "start_year": 2027 }` → label "2027/2028") |
+| PUT | `/api/admin/academic-years/{id}/activate` | Admin | Aktifkan 1 Tahun Ajaran — otomatis menonaktifkan yang lain, hanya 1 yang aktif |
+| DELETE | `/api/admin/academic-years/{id}` | Admin | Hapus draft Tahun Ajaran (tidak bisa hapus yang sedang aktif) |
 | POST | `/api/attendance/scan-in` | Guru | Scan masuk (+ mode inval via `substitute_for_id`) |
 | POST | `/api/attendance/scan-out` | Guru | Scan keluar |
 | GET | `/api/attendance/history` | Guru | Riwayat presensi sendiri |

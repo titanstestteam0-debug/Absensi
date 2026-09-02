@@ -763,6 +763,105 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Settings (Tahun Ajaran & Identitas Sekolah)",
+			"item": [
+				{
+					"name": "Get School Settings (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/settings/school",
+						"description": "Publik, tanpa auth -- dipakai render header & modal login sebelum user login."
+					}
+				},
+				{
+					"name": "Update School Settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{base_url}}/admin/settings/school",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"school_name\": \"SMA Negeri 1 Contoh\",\n  \"logo_data_url\": \"data:image/png;base64,....\"\n}"
+						},
+						"description": "Kirim string kosong pada salah satu field untuk mengembalikan ke default aplikasi."
+					}
+				},
+				{
+					"name": "List Academic Years",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": "{{base_url}}/admin/academic-years"
+					}
+				},
+				{
+					"name": "Create Academic Year (Draft)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{base_url}}/admin/academic-years",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"start_year\": 2027\n}"
+						},
+						"description": "Label & end_year dihitung otomatis (2027 -> \"2027/2028\"). Selalu dibuat sebagai draft (is_active=0)."
+					}
+				},
+				{
+					"name": "Activate Academic Year",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": "{{base_url}}/admin/academic-years/1/activate",
+						"description": "Otomatis menonaktifkan tahun ajaran lain -- hanya 1 yang aktif dalam satu waktu."
+					}
+				},
+				{
+					"name": "Delete Academic Year (Draft)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": "{{base_url}}/admin/academic-years/1",
+						"description": "Tidak bisa menghapus tahun ajaran yang sedang aktif."
+					}
+				}
+			]
 		}
 	]
 }

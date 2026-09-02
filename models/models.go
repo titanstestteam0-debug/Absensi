@@ -100,3 +100,20 @@ type Attendance struct {
 	Status              AttendanceStatus `json:"status"`
 	RoomIDScanned       *uint64          `json:"room_id_scanned,omitempty"`
 }
+
+// AcademicYear ("Tahun Ajaran"), mis. "2026/2027". Hanya satu yang boleh
+// is_active=true dalam satu waktu -- yang lain berstatus draft (tetap bisa
+// disiapkan tapi belum "berlaku").
+type AcademicYear struct {
+	ID        uint64 `json:"id"`
+	Label     string `json:"label"`
+	StartYear int    `json:"start_year"`
+	EndYear   int    `json:"end_year"`
+	IsActive  bool   `json:"is_active"`
+}
+
+// SchoolSettings: identitas sekolah untuk branding header aplikasi.
+type SchoolSettings struct {
+	SchoolName  *string `json:"school_name"`
+	LogoDataURL *string `json:"logo_data_url"`
+}
