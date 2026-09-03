@@ -49,7 +49,7 @@ func ListSchedules(w http.ResponseWriter, r *http.Request) {
 		FROM schedules s
 		JOIN users u ON u.id = s.teacher_id
 		JOIN rooms rm ON rm.id = s.room_id
-		WHERE s.period_month = ? AND s.period_year = ?
+		WHERE s.period_month = ? AND s.period_year = ? AND s.is_active = 1
 		ORDER BY s.day_of_week ASC, s.start_time ASC`
 
 	rows, err := config.DB.Query(query, int(month), year)
@@ -80,6 +80,7 @@ func ListSchedules(w http.ResponseWriter, r *http.Request) {
 func ListSchedulePeriods(w http.ResponseWriter, r *http.Request) {
 	rows, err := config.DB.Query(`
 		SELECT DISTINCT period_year, period_month FROM schedules
+		WHERE is_active = 1
 		ORDER BY period_year DESC, period_month DESC`)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, "Gagal mengambil daftar periode jadwal: "+err.Error())
@@ -235,7 +236,7 @@ func DuplicateSchedule(w http.ResponseWriter, r *http.Request) {
 	result, err := config.DB.Exec(`
 		INSERT INTO schedules (teacher_id, room_id, day_of_week, period_month, period_year, start_time, end_time, target_jp, subject)
 		SELECT teacher_id, room_id, day_of_week, ?, ?, start_time, end_time, target_jp, subject
-		FROM schedules WHERE id = ?`,
+		FROM schedules WHERE id = ? AND is_active = 1`,
 		req.PeriodMonth, req.PeriodYear, id,
 	)
 	if err != nil {
