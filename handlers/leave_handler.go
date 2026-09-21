@@ -63,6 +63,20 @@ func CreateLeave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := result.LastInsertId()
+
+	// Beri tahu semua admin bahwa ada pengajuan baru yang menunggu persetujuan.
+	var teacherName string
+	config.DB.QueryRow(`SELECT name FROM users WHERE id = ?`, teacherID).Scan(&teacherName)
+	if teacherName == "" {
+		teacherName = "Seorang guru"
+	}
+	notifyAllAdmins(
+		NotifLeaveSubmitted,
+		"Pengajuan cuti/izin baru",
+		teacherName+" mengajukan "+leaveTypeLabelFor(req.LeaveType)+" pada "+formatRentangTanggalID(req.StartDate, req.EndDate)+". Menunggu persetujuan Anda.",
+		uint64(id),
+	)
+
 	utils.Success(w, http.StatusCreated, "Pengajuan cuti berhasil dikirim, menunggu persetujuan admin", map[string]interface{}{"id": id})
 }
 
@@ -138,6 +152,16 @@ func AdminCreateLeave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := result.LastInsertId()
+
+	// Beri tahu guru bahwa admin sudah mencatat (dan menyetujui) cutinya.
+	createNotification(
+		req.TeacherID,
+		NotifLeaveAdminCreated,
+		"Cuti/izin dicatat oleh admin",
+		"Admin telah mengajukan "+leaveTypeLabelFor(req.LeaveType)+" untuk Anda pada "+formatRentangTanggalID(req.StartDate, req.EndDate)+" dan langsung disetujui.",
+		uint64(id),
+	)
+
 	utils.Success(w, http.StatusCreated, "Cuti untuk "+teacherName+" berhasil diajukan & otomatis disetujui", map[string]interface{}{
 		"id":         id,
 		"teacher_id": req.TeacherID,
@@ -186,6 +210,10 @@ func ApproveLeave(w http.ResponseWriter, r *http.Request) {
 	}
 	adminID := middleware.GetUserID(r)
 
+	// Ambil data cuti SEBELUM diubah, untuk isi notifikasi & supaya tidak
+	// mengirim notifikasi ganda kalau statusnya memang sudah 'approved'.
+	info, infoErr := getLeaveNotifInfo(id)
+
 	// rejection_reason di-NULL-kan lagi kalau sebelumnya pernah ditolak lalu
 	// disetujui ulang, supaya tidak ada alasan penolakan basi yang nyangkut.
 	_, err = config.DB.Exec(
@@ -195,6 +223,16 @@ func ApproveLeave(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, "Gagal menyetujui cuti: "+err.Error())
 		return
+	}
+
+	if infoErr == nil && info.Status != string(models.LeaveApproved) {
+		createNotification(
+			info.TeacherID,
+			NotifLeaveApproved,
+			"Pengajuan cuti/izin disetujui",
+			"Pengajuan "+leaveTypeLabelFor(info.LeaveType)+" Anda pada "+formatRentangTanggalID(info.StartDate, info.EndDate)+" telah disetujui.",
+			id,
+		)
 	}
 
 	utils.Success(w, http.StatusOK, "Cuti berhasil disetujui", nil)
@@ -223,6 +261,8 @@ func RejectLeave(w http.ResponseWriter, r *http.Request) {
 
 	adminID := middleware.GetUserID(r)
 
+	info, infoErr := getLeaveNotifInfo(id)
+
 	_, err = config.DB.Exec(
 		`UPDATE leaves SET status = 'rejected', rejection_reason = ?, approved_by = ?, approved_at = NOW() WHERE id = ?`,
 		req.Reason, adminID, id,
@@ -232,5 +272,33 @@ func RejectLeave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if infoErr == nil {
+		createNotification(
+			info.TeacherID,
+			NotifLeaveRejected,
+			"Pengajuan cuti/izin ditolak",
+			"Pengajuan "+leaveTypeLabelFor(info.LeaveType)+" Anda pada "+formatRentangTanggalID(info.StartDate, info.EndDate)+" ditolak. Alasan: "+req.Reason,
+			id,
+		)
+	}
+
 	utils.Success(w, http.StatusOK, "Cuti berhasil ditolak", nil)
+}
+
+// leaveNotifInfo: ringkasan data cuti yang dibutuhkan untuk menyusun isi notifikasi.
+type leaveNotifInfo struct {
+	TeacherID uint64
+	LeaveType string
+	StartDate string
+	EndDate   string
+	Status    string
+}
+
+// getLeaveNotifInfo membaca data cuti (guru, jenis, tanggal, status saat ini).
+func getLeaveNotifInfo(leaveID uint64) (leaveNotifInfo, error) {
+	var i leaveNotifInfo
+	err := config.DB.QueryRow(
+		`SELECT teacher_id, leave_type, start_date, end_date, status FROM leaves WHERE id = ?`, leaveID,
+	).Scan(&i.TeacherID, &i.LeaveType, &i.StartDate, &i.EndDate, &i.Status)
+	return i, err
 }

@@ -29,6 +29,12 @@ func SetupRouter() *mux.Router {
 	me.HandleFunc("/profile", handlers.GetProfile).Methods(http.MethodGet)
 	me.HandleFunc("/profile/photo", handlers.UpdateProfilePhoto).Methods(http.MethodPut)
 
+	// Notifikasi milik user yang login (lonceng di header): lihat daftar,
+	// tandai satu / semua sebagai sudah dibaca. Berlaku untuk semua role.
+	me.HandleFunc("/notifications", handlers.ListMyNotifications).Methods(http.MethodGet)
+	me.HandleFunc("/notifications/read-all", handlers.MarkAllNotificationsRead).Methods(http.MethodPut)
+	me.HandleFunc("/notifications/{id}/read", handlers.MarkNotificationRead).Methods(http.MethodPut)
+
 	// -------------------- Guru & Guru Pengganti (butuh login) --------------------
 	// Guru Pengganti (Inval) memakai endpoint yang sama persis dengan Guru
 	// utama untuk presensi (dengan substitute_for_id) dan pengajuan cuti,
@@ -93,6 +99,9 @@ func SetupRouter() *mux.Router {
 	admin.HandleFunc("/leave-types", handlers.CreateLeaveType).Methods(http.MethodPost)
 	admin.HandleFunc("/leave-types/{id}", handlers.UpdateLeaveType).Methods(http.MethodPut)
 	admin.HandleFunc("/leave-types/{id}", handlers.DeleteLeaveType).Methods(http.MethodDelete)
+
+	// Notifikasi: semua notifikasi yang dikirim ke pengguna + status baca-nya
+	admin.HandleFunc("/notifications", handlers.AdminListNotifications).Methods(http.MethodGet)
 
 	// Laporan
 	admin.HandleFunc("/reports/monthly", handlers.MonthlyReport).Methods(http.MethodGet)

@@ -194,3 +194,24 @@ CREATE TABLE school_settings (
 ) ENGINE=InnoDB;
 
 INSERT INTO school_settings (id, school_name, logo_data_url) VALUES (1, NULL, NULL);
+
+-- ---------------------------------------------------------------------
+-- notifications: notifikasi yang dikirim sistem ke pengguna (guru/admin),
+-- mis. pengajuan cuti baru (ke admin) atau cuti disetujui/ditolak (ke guru).
+-- is_read/read_at menandai apakah penerima sudah membukanya atau belum.
+-- ---------------------------------------------------------------------
+CREATE TABLE notifications (
+    id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id     BIGINT UNSIGNED NOT NULL,          -- penerima notifikasi
+    type        VARCHAR(50)     NOT NULL,          -- leave_submitted | leave_approved | leave_rejected | leave_admin_created | ...
+    title       VARCHAR(150)    NOT NULL,
+    message     TEXT            NOT NULL,
+    ref_id      BIGINT UNSIGNED NULL,              -- id entitas terkait (mis. leaves.id)
+    is_read     TINYINT(1)      NOT NULL DEFAULT 0,
+    read_at     DATETIME        NULL,              -- kapan penerima membukanya
+    created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notif_user FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE,
+    INDEX idx_notif_user_read (user_id, is_read, created_at),
+    INDEX idx_notif_created (created_at)
+) ENGINE=InnoDB;

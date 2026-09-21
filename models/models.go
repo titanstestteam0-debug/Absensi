@@ -117,3 +117,21 @@ type SchoolSettings struct {
 	SchoolName  *string `json:"school_name"`
 	LogoDataURL *string `json:"logo_data_url"`
 }
+
+// Notification: pesan yang dikirim sistem ke seorang pengguna (mis. cuti
+// disetujui/ditolak, pengajuan cuti baru). IsRead/ReadAt menandai apakah
+// penerima sudah membukanya. UserName/UserRole hanya terisi di daftar milik
+// admin (yang menampilkan semua penerima).
+type Notification struct {
+	ID        uint64     `json:"id"`
+	UserID    uint64     `json:"user_id"`
+	UserName  string     `json:"user_name,omitempty"`
+	UserRole  string     `json:"user_role,omitempty"`
+	Type      string     `json:"type"`
+	Title     string     `json:"title"`
+	Message   string     `json:"message"`
+	RefID     *uint64    `json:"ref_id,omitempty"`
+	IsRead    bool       `json:"is_read"`
+	ReadAt    *time.Time `json:"read_at,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
+}

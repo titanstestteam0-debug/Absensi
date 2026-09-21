@@ -217,6 +217,7 @@ Implementasi lengkap ada di `handlers/attendance_handler.go`.
 | POST | `/api/admin/leaves` | Admin | Bantu ajukan cuti atas nama guru — LANGSUNG approved (tanpa alur pending) |
 | PUT | `/api/admin/leaves/{id}/approve` | Admin | Setujui cuti |
 | PUT | `/api/admin/leaves/{id}/reject` | Admin | Tolak cuti |
+| GET | `/api/admin/notifications?status=all\|unread\|read&limit=` | Admin | Semua notifikasi yang dikirim ke pengguna + status sudah dibaca/belum (+ ringkasan jumlah) |
 | GET/POST | `/api/admin/leave-types` | Admin | Master data jenis cuti/izin (semua, termasuk nonaktif) |
 | PUT/DELETE | `/api/admin/leave-types/{id}` | Admin | Update label / hapus permanen jenis cuti |
 | GET | `/api/admin/reports/monthly?month=&year=` | Admin | Rekap bulanan per guru (+ info sesi sbg/digantikan guru pengganti & jumlah cuti) |
@@ -240,6 +241,9 @@ Implementasi lengkap ada di `handlers/attendance_handler.go`.
 | GET | `/api/attendance/history` | Guru | Riwayat presensi sendiri |
 | POST | `/api/leaves` | Guru | Ajukan cuti/izin |
 | GET | `/api/leaves` | Guru | Riwayat cuti sendiri |
+| GET | `/api/notifications?limit=` | Semua role | Notifikasi milik user yang login + `unread_count` (untuk lonceng di header) |
+| PUT | `/api/notifications/{id}/read` | Semua role | Tandai satu notifikasi milik sendiri sebagai sudah dibaca |
+| PUT | `/api/notifications/read-all` | Semua role | Tandai semua notifikasi milik sendiri sebagai sudah dibaca |
 | GET | `/api/leave-types` | Guru | Jenis cuti/izin yang aktif (untuk dropdown form pengajuan) |
 
 ## 7. Catatan untuk Akbar (Flutter) & Daniel (Svelte)
