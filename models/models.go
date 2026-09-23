@@ -116,6 +116,10 @@ type AcademicYear struct {
 type SchoolSettings struct {
 	SchoolName  *string `json:"school_name"`
 	LogoDataURL *string `json:"logo_data_url"`
+	// Subjudul kecil yang tampil di bawah nama sekolah di header aplikasi
+	// (mis. "Sistem Presensi Mengajar berbasis QR Code"). NULL -> tampil
+	// teks bawaan aplikasi.
+	Tagline *string `json:"tagline"`
 }
 
 // Notification: pesan yang dikirim sistem ke seorang pengguna (mis. cuti

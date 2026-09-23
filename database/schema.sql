@@ -189,11 +189,14 @@ CREATE TABLE school_settings (
     id             TINYINT UNSIGNED PRIMARY KEY,
     school_name    VARCHAR(150)  NULL,
     logo_data_url  MEDIUMTEXT    NULL,
+    -- Subjudul kecil di bawah nama sekolah di header (mis. "Sistem Presensi
+    -- Mengajar berbasis QR Code"). NULL -> tampil teks bawaan aplikasi.
+    tagline        VARCHAR(150)  NULL,
     updated_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
                                   ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-INSERT INTO school_settings (id, school_name, logo_data_url) VALUES (1, NULL, NULL);
+INSERT INTO school_settings (id, school_name, logo_data_url, tagline) VALUES (1, NULL, NULL, NULL);
 
 -- ---------------------------------------------------------------------
 -- notifications: notifikasi yang dikirim sistem ke pengguna (guru/admin),
