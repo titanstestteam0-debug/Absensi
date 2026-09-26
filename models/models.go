@@ -42,19 +42,20 @@ type LeaveType struct {
 }
 
 type Schedule struct {
-	ID          uint64 `json:"id"`
-	TeacherID   uint64 `json:"teacher_id"`
-	TeacherName string `json:"teacher_name,omitempty"`
-	RoomID      uint64 `json:"room_id"`
-	RoomName    string `json:"room_name,omitempty"`
-	DayOfWeek   int    `json:"day_of_week"` // 1=Senin ... 7=Minggu
-	PeriodMonth int    `json:"period_month"` // 1-12, bulan berlakunya jadwal ini
-	PeriodYear  int    `json:"period_year"`  // tahun berlakunya jadwal ini
-	StartTime   string `json:"start_time"`  // "HH:MM:SS"
-	EndTime     string `json:"end_time"`
-	TargetJP    int    `json:"target_jp"`
-	Subject     string `json:"subject,omitempty"`
-	IsActive    bool   `json:"is_active"`
+	ID            uint64  `json:"id"`
+	SourceDraftID *uint64 `json:"source_draft_id,omitempty"` // draft asal (nil = dibuat manual)
+	TeacherID     uint64  `json:"teacher_id"`
+	TeacherName   string  `json:"teacher_name,omitempty"`
+	RoomID        uint64  `json:"room_id"`
+	RoomName      string  `json:"room_name,omitempty"`
+	DayOfWeek     int     `json:"day_of_week"`  // 1=Senin ... 7=Minggu
+	PeriodMonth   int     `json:"period_month"` // 1-12, bulan berlakunya jadwal ini
+	PeriodYear    int     `json:"period_year"`  // tahun berlakunya jadwal ini
+	StartTime     string  `json:"start_time"`   // "HH:MM:SS"
+	EndTime       string  `json:"end_time"`
+	TargetJP      int     `json:"target_jp"`
+	Subject       string  `json:"subject,omitempty"`
+	IsActive      bool    `json:"is_active"`
 }
 
 type LeaveStatus string
@@ -138,4 +139,32 @@ type Notification struct {
 	IsRead    bool       `json:"is_read"`
 	ReadAt    *time.Time `json:"read_at,omitempty"`
 	CreatedAt time.Time  `json:"created_at"`
+}
+
+// ScheduleDraft: draft jadwal mengajar -- dinamai bebas oleh admin (mis.
+// "2026/2027 V1"), diisi terpisah dari jadwal yang berlaku (schedules),
+// dan baru memengaruhi jadwal LIVE saat diaktifkan (lihat draft_handler.go).
+type ScheduleDraft struct {
+	ID            uint64 `json:"id"`
+	Name          string `json:"name"`
+	IsActive      bool   `json:"is_active"`
+	ScheduleCount int    `json:"schedule_count"` // jumlah baris jadwal di dalam draft ini
+}
+
+// DraftSchedule: satu baris jadwal DI DALAM sebuah draft. Strukturnya sama
+// persis dengan Schedule, tapi belum "berlaku" sampai draft-nya diaktifkan.
+type DraftSchedule struct {
+	ID          uint64 `json:"id"`
+	DraftID     uint64 `json:"draft_id"`
+	TeacherID   uint64 `json:"teacher_id"`
+	TeacherName string `json:"teacher_name,omitempty"`
+	RoomID      uint64 `json:"room_id"`
+	RoomName    string `json:"room_name,omitempty"`
+	DayOfWeek   int    `json:"day_of_week"`
+	PeriodMonth int    `json:"period_month"`
+	PeriodYear  int    `json:"period_year"`
+	StartTime   string `json:"start_time"`
+	EndTime     string `json:"end_time"`
+	TargetJP    int    `json:"target_jp"`
+	Subject     string `json:"subject,omitempty"`
 }

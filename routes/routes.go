@@ -85,6 +85,19 @@ func SetupRouter() *mux.Router {
 	admin.HandleFunc("/schedules/{id}", handlers.DeleteSchedule).Methods(http.MethodDelete)
 	admin.HandleFunc("/schedules/{id}/duplicate", handlers.DuplicateSchedule).Methods(http.MethodPost)
 
+	// Draft Jadwal: pengganti "Tahun Ajaran" lama -- draft berisi susunan
+	// jadwal sungguhan, terpisah dari jadwal live sampai diaktifkan.
+	admin.HandleFunc("/drafts", handlers.ListDrafts).Methods(http.MethodGet)
+	admin.HandleFunc("/drafts", handlers.CreateDraft).Methods(http.MethodPost)
+	admin.HandleFunc("/drafts/{id}", handlers.DeleteDraft).Methods(http.MethodDelete)
+	admin.HandleFunc("/drafts/{id}/activate", handlers.ActivateDraft).Methods(http.MethodPut)
+	admin.HandleFunc("/drafts/{id}/deactivate", handlers.DeactivateDraft).Methods(http.MethodPut)
+	admin.HandleFunc("/drafts/{draftId}/schedules", handlers.ListDraftSchedules).Methods(http.MethodGet)
+	admin.HandleFunc("/drafts/{draftId}/schedules/periods", handlers.ListDraftSchedulePeriods).Methods(http.MethodGet)
+	admin.HandleFunc("/drafts/{draftId}/schedules", handlers.CreateDraftSchedule).Methods(http.MethodPost)
+	admin.HandleFunc("/drafts/{draftId}/schedules/{id}", handlers.UpdateDraftSchedule).Methods(http.MethodPut)
+	admin.HandleFunc("/drafts/{draftId}/schedules/{id}", handlers.DeleteDraftSchedule).Methods(http.MethodDelete)
+
 	// Cuti/izin
 	admin.HandleFunc("/leaves", handlers.ListAllLeaves).Methods(http.MethodGet)
 	// Admin bisa langsung mengajukan+menyetujui cuti atas nama guru (tanpa

@@ -86,6 +86,11 @@ INSERT INTO leave_types (code, label) VALUES
 -- ---------------------------------------------------------------------
 CREATE TABLE schedules (
     id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    -- draft asal jadwal ini (NULL = dibuat manual, bukan dari draft). Diisi
+    -- otomatis saat sebuah draft jadwal diaktifkan (lihat schedule_drafts di
+    -- bawah), dipakai untuk membersihkan baris ini lagi saat draft-nya
+    -- dinonaktifkan.
+    source_draft_id BIGINT UNSIGNED NULL,
     teacher_id   BIGINT UNSIGNED NOT NULL,
     room_id      BIGINT UNSIGNED NOT NULL,
     day_of_week  TINYINT UNSIGNED NOT NULL,
@@ -105,7 +110,8 @@ CREATE TABLE schedules (
         ON DELETE RESTRICT,
     INDEX idx_schedules_teacher_day (teacher_id, day_of_week),
     INDEX idx_schedules_room_day (room_id, day_of_week),
-    INDEX idx_schedules_period (period_year, period_month)
+    INDEX idx_schedules_period (period_year, period_month),
+    INDEX idx_schedules_source_draft (source_draft_id)
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
@@ -217,4 +223,51 @@ CREATE TABLE notifications (
         ON DELETE CASCADE,
     INDEX idx_notif_user_read (user_id, is_read, created_at),
     INDEX idx_notif_created (created_at)
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------
+-- schedule_drafts: draft jadwal mengajar -- disiapkan terpisah dari jadwal
+-- yang sedang berlaku, dinamai bebas oleh admin (mis. "2026/2027 V1").
+-- Hanya SATU draft yang boleh aktif (materialized ke tabel `schedules`)
+-- dalam satu waktu.
+--
+-- draft_schedules: isi jadwal di dalam sebuah draft, strukturnya sama
+-- persis dengan `schedules` tapi terpisah -- bebas diedit tanpa
+-- memengaruhi jadwal yang sedang berlaku, sampai draft-nya diaktifkan.
+--
+-- schedules.source_draft_id: menandai baris jadwal LIVE yang berasal dari
+-- draft mana (NULL = dibuat manual langsung, bukan dari draft). Dipakai
+-- untuk membersihkan jadwal itu lagi saat draft sumbernya dinonaktifkan.
+-- ---------------------------------------------------------------------
+CREATE TABLE schedule_drafts (
+    id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(100)      NOT NULL UNIQUE,  -- mis. "2026/2027 V1"
+    is_active   TINYINT(1)        NOT NULL DEFAULT 0,
+    created_at  DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                   ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE draft_schedules (
+    id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    draft_id     BIGINT UNSIGNED NOT NULL,
+    teacher_id   BIGINT UNSIGNED NOT NULL,
+    room_id      BIGINT UNSIGNED NOT NULL,
+    day_of_week  TINYINT UNSIGNED NOT NULL,
+    period_month TINYINT UNSIGNED NOT NULL,
+    period_year  SMALLINT UNSIGNED NOT NULL,
+    start_time   TIME            NOT NULL,
+    end_time     TIME            NOT NULL,
+    target_jp    INT UNSIGNED    NOT NULL,
+    subject      VARCHAR(150)    NULL,
+    created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                  ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_draft_schedules_draft FOREIGN KEY (draft_id) REFERENCES schedule_drafts(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_draft_schedules_teacher FOREIGN KEY (teacher_id) REFERENCES users(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_draft_schedules_room FOREIGN KEY (room_id) REFERENCES rooms(id)
+        ON DELETE RESTRICT,
+    INDEX idx_draft_schedules_draft_period (draft_id, period_year, period_month)
 ) ENGINE=InnoDB;
