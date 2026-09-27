@@ -48,6 +48,12 @@ CREATE TABLE IF NOT EXISTS draft_schedules (
     INDEX idx_draft_schedules_draft_period (draft_id, period_year, period_month)
 ) ENGINE=InnoDB;
 
+-- Dipisah jadi dua ALTER TABLE terpisah (bukan digabung dalam satu
+-- statement): TiDB kadang memvalidasi klausa ADD INDEX terhadap skema
+-- SEBELUM ADD COLUMN diterapkan kalau keduanya digabung dalam satu
+-- ALTER TABLE, sehingga gagal dengan "column does not exist".
 ALTER TABLE schedules
-    ADD COLUMN IF NOT EXISTS source_draft_id BIGINT UNSIGNED NULL AFTER id,
+    ADD COLUMN IF NOT EXISTS source_draft_id BIGINT UNSIGNED NULL AFTER id;
+
+ALTER TABLE schedules
     ADD INDEX IF NOT EXISTS idx_schedules_source_draft (source_draft_id);
